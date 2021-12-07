@@ -1,0 +1,59 @@
+{
+  "name": "modular-body",
+  "version": "0.5.0",
+  "description": "Modular and lightweight body parser middleware for Node.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/floratmin/modular-body.git"
+  },
+  "scripts": {
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "build": "rm -fr dist/* && tsc",
+    "docs": "rm -fr docs/* && typedoc --out docs src/**",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Florian Murat Koch <florian.murat.koch@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "bytes": "^3.1.1",
+    "content-type": "^1.0.4",
+    "http-errors": "^1.8.1",
+    "unpipe": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/bytes": "^3.1.1",
+    "@types/content-type": "^1.1.5",
+    "@types/http-errors": "^1.8.1",
+    "@types/jest": "^27.0.2",
+    "@types/node": "^16.11.7",
+    "@types/on-finished": "^2.3.1",
+    "@types/qs": "^6.9.7",
+    "@types/supertest": "^2.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "base62str": "^1.0.9",
+    "c8": "^7.10.0",
+    "eslint": "^8.2.0",
+    "eslint-plugin-jest": "^25.3.0",
+    "jest": "^27.3.1",
+    "lzw-stream": "^1.0.0",
+    "nodemon": "^2.0.15",
+    "on-finished": "^2.3.0",
+    "qs": "^6.10.1",
+    "supertest": "^6.1.6",
+    "ts-jest": "^27.0.7",
+    "ts-node": "^10.4.0",
+    "ts-node-dev": "^1.1.8",
+    "typedoc": "^0.22.9",
+    "typescript": "^4.5.2"
+  }
+}

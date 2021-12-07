@@ -1,0 +1,7 @@
+.git
+.idea
+.run
+docs
+node_modules
+dist
+coverage
