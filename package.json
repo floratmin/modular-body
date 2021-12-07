@@ -17,7 +17,12 @@
     "test:coverage": "jest --coverage"
   },
   "type": "module",
-  "keywords": [],
+  "keywords": ["body-parser"],
+  "files": [
+    "LICENSE.md",
+    "README.md",
+    "dist"
+  ],
   "author": "Florian Murat Koch <florian.murat.koch@gmail.com>",
   "license": "MIT",
   "engines": {
