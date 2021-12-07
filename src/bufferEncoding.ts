@@ -207,7 +207,7 @@ type DefaultParser<U, V> = {
  * @property verify A function which has access to the whole data and which should throw an error if the data can not be verified
  */
 export type ParserConfiguration<U, V> = {
-  inflate?: boolean | string | string[];
+  inflate?: true | string | string[];
   limit?: string | number;
   requireContentLength?: boolean;
   parser?:

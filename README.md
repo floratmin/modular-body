@@ -1,4 +1,4 @@
-#Lightweight and extendable body-parser for express style web frameworks
+# Lightweight and extendable body-parser for express style web frameworks
 
 ### Installation
 
@@ -11,7 +11,8 @@ import express from 'express';
 import {bodyParser} from 'modular-body';
 
 const app = express();
-app.use(bodyParser()); // createse parsers for 'application/json', 'text/plain', 'application/octet-stream' and 'application/x-www-form-urlencoded'
+app.use(bodyParser()); // createse parsers for 'application/json', 'text/plain',
+                       // 'application/octet-stream' and 'application/x-www-form-urlencoded'
 app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
@@ -20,7 +21,7 @@ import express from 'express';
 import {bodyParser} from 'modular-body';
 
 const app = express();
-app.use(bodyParser.json()); // createse parser only for 'application/json'
+app.use(bodyParser.json()); // create parser only for 'application/json'
 app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
@@ -37,11 +38,12 @@ import {MediaType} from './mediaTypes';
 
 const parserConfigurations: ParserConfigurations = [
   'text/plain', // use default configuration
-  { // change default configuration, not specified fields will be used from options keys or from default configuration
+  { // change default configuration, not specified fields will be used from options entries
+    // or from default configuration of parser
     inflate: ['identity', 'gzip', 'br'],
     limit: '20Mb', // use custom limit
     defaultEncoding: 'ucs-2', // this encoding will be used when charset is not specified
-    encodings: ['latin1'], // add additional encodings
+    encodings: ['latin1'], // add additional encodings which should be used for this parser
     matcher: 'application/json',
     parser: (payload: string) => JSON.stringify(payload, null, 2),
   }, {
@@ -50,7 +52,12 @@ const parserConfigurations: ParserConfigurations = [
   }, { // create individual parser configuration
     inflate: 'identity', // allow no compression
     limit: 1000000,
-    matcher: ['image/jpeg', 'image/png', 'mpeg/*', (mediaType: MediaType) => mediaType[0] === 'image' && mediaType[1].match(/+xml$/)],
+    matcher: [
+      'image/jpeg',
+      'image/png',
+      'mpeg/*',
+      (mediaType: MediaType) => mediaType[0] === 'image' && mediaType[1].match(/+xml$/),
+    ],
     parser: (payload: Buffer) => 'Creating image...',
   },
 ];
@@ -63,7 +70,7 @@ app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
 ### Extending for special requirements
-For extending to match configurations of the npm package `body-parser` see the tests in `rawBodyParser.test.ts`, `textBodyParser.test.ts`, `jsonBodyParser.test.ts`
+For extending equivalent to the npm package `body-parser` see the tests in `rawBodyParser.test.ts`, `textBodyParser.test.ts`, `jsonBodyParser.test.ts`
 and `urlencodedBodyParser.test.ts`.
 
 ```ts
@@ -100,23 +107,24 @@ app.listen(3000, () => console.log('Server running on port 3000'));
 #### Properties
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| defaultLimit | number &vert; string | The default limit which should be set on the parser configurations, default is 20kb. |
-| inflate | true &vert; string &vert; string[] | When true allows all available decompressors, otherwise only specified decompressors. Default is 'identity'. |
-| requireContentLength | boolean | Set if the 'Content-Length' header has to be set, default is 'false'. |
+| `defaultLimit` | *number &vert; string* | The default limit which should be set on the parser configurations, default is *'20kb'*. |
+| `inflate` | *true &vert; string &vert; string[]* | When true allows all available decompressors, otherwise only specified decompressors. Default is *'identity'*. |
+| `requireContentLength` | *boolean* | Set if the *'Content-Length'* header has to be set, default is *false*. |
+| `defaultContentType` | *string* | When *'Content-Type'* header is missing, then use this as default. Default is not set which will throw when header is missing. |
 
 ### Type `ParserConfiguration<U, V>`
 
 #### Properties
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| inflate | boolean &vert; string &vert; string[] | Add the allowed extractor(s) as string or array, add all with true, remove/prevent with false from default config, prevent with undefined |
-| limit | string &vert; number | Specify the maximum allowed body size as a number in bytes or as a 'byte' string |
-| requireContentLength | boolean | Specify if the header 'Content-Length' has to be set on the request |
-| parser | ((payload: Buffer &vert; U) => V) &vert; null | A function to parse the payload from the buffer or after encoding |
-| matcher | MediaTypeIdentifier &vert; MediaTypeIdentifier[] | The matchers for the allowed mime types as a matching function or mime type where '*' is allowed on either side of the slash to allow all matches. |
-| encodings | string &vert; string[] &vert; boolean &vert; null | Allow the specified encoding(s), allow all with true, remove/prevent with false or null from default config, no encoding with undefined |
-| defaultEncoding | string | The encoding which should be used when 'charset' is not set on the 'Content-Type' header |
-| verify | (req: Request<U, V>, res: Response, buffer: Buffer &vert; U &vert; V, body?: Body<U, V>, encoding: string &vert; false) => void | Function to verify the body, it should throw when verify fails |
+| `inflate` | *true &vert; string &vert; string[]* | Add the allowed decompressors(s) as string or array, allow all decompressors with true |
+| `limit` | *string &vert; number* | Specify the maximum allowed body size as a number in bytes or as a *byte* string |
+| `requireContentLength` | *boolean* | Specify if the header *'Content-Length'* has to be set on the request |
+| `parser` | *((payload: Buffer &vert; U) => V) &vert; null* | A function to parse the payload from the buffer or after encoding |
+| `matcher` | *MediaTypeIdentifier &vert; MediaTypeIdentifier[]* | The matchers for the allowed mime types as a matching function or mime type where *'&#42;'* is allowed on either side of the slash to matches all. |
+| `encodings` | *string &vert; string[] &vert; boolean &vert; null* | Allow the specified encoding(s), allow all with *true*, remove/prevent with *false* or *null* from default config, no encoding with *undefined* |
+| `defaultEncoding` | *string* | The encoding which should be used when *'charset'* is not set on the *'Content-Type'* header |
+| `verify` | *(req: Request<U, V>, res: Response, buffer: Buffer &vert; U &vert; V, body?: Body<U, V>, encoding: string &vert; false) => void* | Function to verify the body, it should throw when verify fails |
 
 For more details please consult the type documentation in the *doc* folder after building with `npm run docs`.
 
@@ -127,18 +135,18 @@ For more details please consult the type documentation in the *doc* folder after
 #### Properties
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| onData | (buffer: Buffer) => T | Transform function for the chunk from the 'onData' event |
-| onEnd | () => T | Transform function for the 'onEnd' event |
-| reduce | (array: T[]) => U | Reduce function to join the array with the transformed chunks |
-| encodings | string[] | Array with charset names for which this encoder should be used |
+| `onData` | *(buffer: Buffer) => T* | Transform function for the chunk from the *'onData'* event |
+| `onEnd` | *() => T* | Transform function for the *'onEnd'* event |
+| `reduce` | *(array: T[]) => U* | Reduce function to join the array with the transformed chunks |
+| `encodings` | *string[]* | Array with charset names for which this encoder should be used |
 
 ### Type `UnchunkedBufferEncoder<U>`;
 
 #### Properties
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| transform | (buffer: Buffer) => U | The transform function to encode the joined buffer. |
-| encodings | string[] | Array with charset names for which this encoder should be used |
+| `transform` | *(buffer: Buffer) => U* | The transform function to encode the joined buffer. |
+| `encodings` | *string[]* | Array with charset names for which this encoder should be used |
 
 ### Type `Decompressors` = Record<string, () => Transform>;
 Keys are the names for the decompressors, values are functions resolving to stream transformers.
@@ -148,42 +156,42 @@ Keys are the names for the decompressors, values are functions resolving to stre
 #### Parameters
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| options | DefaultOptions | Default options for the parserConfiguration |
-| parserConfigurations<U, V> | ParserConfigurations | An array of objects of type ParserConfiguration and/or DefaultMediaType or a single of these |
-| bufferEncodings | BufferEncoder<T, U>[] | An object where we can add/replace buffer encodings |
-| decompressors | Decompressors | An object where we can add/replace stream decompressors |
+| `options` | *DefaultOptions* | Default options for the parserConfiguration |
+| `parserConfigurations` | *ParserConfigurations<U, V>* | An array of objects of type ParserConfiguration and/or DefaultMediaType or a single of these |
+| `bufferEncodings` | *BufferEncoder<T, U>[]* | An object where we can add/replace buffer encodings |
+| `decompressors` | *Decompressors* | An object where we can add/replace stream decompressors |
 
-### Method `bodyParser.json`
-
-#### Parameters
-| **Name** | **Type** | **Details** |
-|------|------|---------|
-| options | DefaultOptions | Default options for the parserConfiguration |
-| bufferEncodings | BufferEncoder<string, string>[] | An object where we can add/replace buffer encodings |
-| decompressors | Decompressors | An object where we can add/replace stream decompressors |
-
-### Method `bodyParser.raw`
+### Function `bodyParser.json`
 
 #### Parameters
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| options | DefaultOptions | Default options for the parserConfiguration |
-| decompressors | Decompressors | An object where we can add/replace stream decompressors |
+| `options` | *DefaultOptions* | Default options for the parserConfiguration |
+| `bufferEncodings` | *BufferEncoder<string, string>[]* | An object where we can add/replace buffer encodings |
+| `decompressors` | *Decompressors* | An object where we can add/replace stream decompressors |
 
-### Method `bodyParser.urlencoded`
-
-#### Parameters
-| **Name** | **Type** | **Details** |
-|------|------|---------|
-| options | DefaultOptions | Default options for the parserConfiguration |
-| bufferEncodings | BufferEncoder<string, string>[] | An object where we can add/replace buffer encodings |
-| decompressors | Decompressors | An object where we can add/replace stream decompressors |
-
-### Method `bodyParser.text`
+### Function `bodyParser.raw`
 
 #### Parameters
 | **Name** | **Type** | **Details** |
 |------|------|---------|
-| options | DefaultOptions | Default options for the parserConfiguration |
-| bufferEncodings | BufferEncoder<string, string>[] | An object where we can add/replace buffer encodings |
-| decompressors | Decompressors | An object where we can add/replace stream decompressors |
+| `options` | *DefaultOptions* | Default options for the parserConfiguration |
+| `decompressors` | *Decompressors* | An object where we can add/replace stream decompressors |
+
+### Function `bodyParser.urlencoded`
+
+#### Parameters
+| **Name** | **Type** | **Details** |
+|------|------|---------|
+| `options` | *DefaultOptions* | Default options for the parserConfiguration |
+| `bufferEncodings` | *BufferEncoder<string, string>[]* | An object where we can add/replace buffer encodings |
+| `decompressors` | *Decompressors* | An object where we can add/replace stream decompressors |
+
+### Function `bodyParser.text`
+
+#### Parameters
+| **Name** | **Type** | **Details** |
+|------|------|---------|
+| `options` | *DefaultOptions* | Default options for the parserConfiguration |
+| `bufferEncodings` | *BufferEncoder<string, string>[]* | An object where we can add/replace buffer encodings |
+| `decompressors` | *Decompressors* | An object where we can add/replace stream decompressors |
