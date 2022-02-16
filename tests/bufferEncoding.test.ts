@@ -761,7 +761,7 @@ describe('Joining parser configurations', () => {
       const parserConfigurations = [
         {
           matcher: 'application/json',
-          inflate: true,
+          inflate: true as const,
         }, {
           matcher: 'application/x-www-form-urlencoded',
           inflate: 'identity',
