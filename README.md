@@ -124,7 +124,8 @@ type JSONValue =
     | Array<JSONValue>;
 
 /**
- * Adapted from https://stackoverflow.com/questions/8085004/iterate-through-nested-javascript-objects
+ * Adapted from
+ * https://stackoverflow.com/questions/8085004/iterate-through-nested-javascript-objects
  * @param jsonValue The object from the parsed JSON string
  * @param key The key which should be found in the object
  */
