@@ -272,7 +272,16 @@ export const defaultMediaTypeParsers: Record<DefaultMediaType, DefaultParser<str
     emptyResponse: {},
   },
   'application/json': {
-    parser: (payload: string) => JSON.parse(payload),
+    parser: (payload: string) => {
+      const raw = JSON.parse(payload);
+      // Prevent prototype pollution of first level by forbidding to add any keys to '__proto__'
+      // For speed considerations we do not search for '__proto__' keys in nested objects.
+      // For a nested implementation please look at the README file.
+      if (typeof raw === 'object' && !Array.isArray(raw) && Object.keys(raw.__proto__).length > 0) {
+        throw new Error('__proto__ key not allowed in JSON body on main level');
+      }
+      return raw;
+    },
     defaultEncoding: 'utf-8',
     emptyResponse: {},
   },

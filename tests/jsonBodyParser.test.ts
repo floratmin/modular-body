@@ -709,6 +709,114 @@ describe('encoding', function () {
   });
 });
 
+describe('Test disallow "__proto__" key on object level 1', () => {
+  it('Should throw when "__proto__" key found on object', (done) => {
+    request(createServer())
+      .post('/')
+      .set('Content-Type', 'application/json')
+      .send('{"user":"tobi","__proto__":"poison"}')
+      .expect(400, `Parse error: __proto__ key not allowed in JSON body on main level`, done);
+  });
+  it('Should not throw when "__proto__" used in text', (done) => {
+    request(createServer())
+      .post('/')
+      .set('Content-Type', 'application/json')
+      .send('{"user":"tobi","other":"When using \\"__proto__\\": in a value it should not throw"}')
+      .expect(200, '{"user":"tobi","other":"When using \\"__proto__\\": in a value it should not throw"}', done);
+  });
+  it('Should throw when "__proto__" key is used in nested object', (done) => {
+    type JSONValue =
+      | string
+      | number
+      | boolean
+      | { [x: string]: JSONValue }
+      | Array<JSONValue>;
+
+    /**
+     * Adapted from https://stackoverflow.com/questions/8085004/iterate-through-nested-javascript-objects
+     * @param jsonValue The object from the parsed JSON string
+     * @param key The key which should be found in the object
+     */
+    function keyExistsInNestedObject(jsonValue: JSONValue, key: string) {
+      const allLists: (null | JSONValue[])[] = [];
+      const allArray: (null | JSONValue[])[] = [];
+      if (typeof jsonValue !== 'object' || jsonValue === null) {
+        return false;
+      }
+      if (Array.isArray(jsonValue)) {
+        allArray.push(jsonValue);
+      } else {
+        if (Object.keys(jsonValue).includes(key)) {
+          return true;
+        }
+        allLists.push(Object.values(jsonValue));
+      }
+      let allListsSize = allLists.length;
+      let allArraySize = allArray.length;
+      let indexLists = 0;
+      let indexArray = 0;
+
+      do {
+        for (; indexArray < allArraySize; indexArray = indexArray + 1) {
+          const currentArray = allArray[indexArray];
+          const currentLength = (<JSONValue []>currentArray).length;
+          for (let i = 0; i < currentLength; i += 1) {
+            const arrayItemInner = (<JSONValue []>currentArray)[i];
+            if (typeof arrayItemInner === 'object' && arrayItemInner !== null) {
+              if (Array.isArray(arrayItemInner)) {
+                allArraySize = allArray.push(arrayItemInner);
+              } else {
+                if (Object.keys(arrayItemInner).includes(key)) {
+                  return true;
+                }
+                allListsSize = allLists.push(Object.values(arrayItemInner));
+              }
+            }
+          }
+          allArray[indexArray] = null;
+        }
+        for (; indexLists < allListsSize; indexLists = indexLists + 1) {
+          const currentList = allLists[indexLists];
+          const currentLength = (<JSONValue []>currentList).length;
+          for (let i = 0; i < currentLength; i += 1) {
+            const listItemInner = (<JSONValue []>currentList)[i];
+            if (typeof listItemInner === 'object' && listItemInner !== null) {
+              if (Array.isArray(listItemInner)) {
+                allArraySize = allArray.push(listItemInner);
+              } else {
+                if (Object.keys(listItemInner).includes(key)) {
+                  return true;
+                }
+                allListsSize = allLists.push(Object.values(listItemInner));
+              }
+            }
+          }
+          allLists[indexLists] = null;
+        }
+      } while (indexLists < allListsSize || indexArray < allArraySize);
+      return false;
+    }
+
+    const parserConfiguration = <ParserConfigurations<string, JSONValue>>{
+      matcher: 'application/json',
+      parser: (payload: string) => {
+        const jsonObject: JSONValue = JSON.parse(payload);
+        if (typeof jsonObject === 'object' && payload.includes('"__proto__":') && keyExistsInNestedObject(jsonObject, '__proto__')) {
+          throw new Error('Using "__proto__" as JSON key is not allowed.');
+        }
+        return jsonObject;
+      },
+      defaultEncoding: 'utf-8',
+      emptyResponse: {},
+    };
+    request(createServer(undefined, parserConfiguration))
+      .post('/')
+      .set('Content-Type', 'application/json')
+      .send('{"user":"tobi","nested":[1, {"a":[{"b":null,"__proto__":true}]}]}')
+      .expect(400, `Parse error: Using "__proto__" as JSON key is not allowed.`, done);
+  });
+});
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 function createServer (opts: DefaultOptions | Function = {}, parserConfigurations?: ParserConfigurations<any, any>, bufferEncodings?: BufferEncoder<unknown, any>[], decompressors?: Decompressors) {
   const _bodyParser = typeof opts !== 'function'

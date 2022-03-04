@@ -16,6 +16,9 @@ app.use(bodyParser()); // createse parsers for 'application/json', 'text/plain',
 app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
+Please be aware that the prevention of prototype poisoning is only implemented for the first
+level of an object converted from JSON. If it is necessary also for nested objects, the
+implementation is shown further down in this readme.
 ```ts
 import express from 'express';
 import {bodyParser} from 'modular-body';
@@ -101,7 +104,112 @@ app.use(bodyParser({inflate: true}, undefined, bufferEncodings, decompressors));
 
 app.listen(3000, () => console.log('Server running on port 3000'));
 ```
+### Preventing prototype poisoning on nested parsed JSON objects
+This is an example code to prevent prototype poisoning. The default implementation checks
+only the existence of a "__proto__" key only for the keys in the first object level because
+of speed considerations. If the usage of the "__proto__" key should be prevented for all
+nested objects then this parser configuration could be used.
+```ts
+import express from 'express';
+import {
+  bodyParser,
+  ParserConfigurations,
+} from 'modular-body';
 
+type JSONValue =
+    | string
+    | number
+    | boolean
+    | { [x: string]: JSONValue }
+    | Array<JSONValue>;
+
+/**
+ * Adapted from https://stackoverflow.com/questions/8085004/iterate-through-nested-javascript-objects
+ * @param jsonValue The object from the parsed JSON string
+ * @param key The key which should be found in the object
+ */
+function keyExistsInNestedObject(jsonValue: JSONValue, key: string) {
+  const allLists: (null | JSONValue[])[] = [];
+  const allArray: (null | JSONValue[])[] = [];
+  if (typeof jsonValue !== 'object' || jsonValue === null) {
+    return false;
+  }
+  if (Array.isArray(jsonValue)) {
+    allArray.push(jsonValue);
+  } else {
+    if (Object.keys(jsonValue).includes(key)) {
+      return true;
+    }
+    allLists.push(Object.values(jsonValue));
+  }
+  let allListsSize = allLists.length;
+  let allArraySize = allArray.length;
+  let indexLists = 0;
+  let indexArray = 0;
+
+  do {
+    for (; indexArray < allArraySize; indexArray = indexArray + 1) {
+      const currentArray = allArray[indexArray];
+      const currentLength = (<JSONValue []>currentArray).length;
+      for (let i = 0; i < currentLength; i += 1) {
+        const arrayItemInner = (<JSONValue []>currentArray)[i];
+        if (typeof arrayItemInner === 'object' && arrayItemInner !== null) {
+          if (Array.isArray(arrayItemInner)) {
+            allArraySize = allArray.push(arrayItemInner);
+          } else {
+            if (Object.keys(arrayItemInner).includes(key)) {
+              return true;
+            }
+            allListsSize = allLists.push(Object.values(arrayItemInner));
+          }
+        }
+      }
+      allArray[indexArray] = null;
+    }
+    for (; indexLists < allListsSize; indexLists = indexLists + 1) {
+      const currentList = allLists[indexLists];
+      const currentLength = (<JSONValue []>currentList).length;
+      for (let i = 0; i < currentLength; i += 1) {
+        const listItemInner = (<JSONValue []>currentList)[i];
+        if (typeof listItemInner === 'object' && listItemInner !== null) {
+          if (Array.isArray(listItemInner)) {
+            allArraySize = allArray.push(listItemInner);
+          } else {
+            if (Object.keys(listItemInner).includes(key)) {
+              return true;
+            }
+            allListsSize = allLists.push(Object.values(listItemInner));
+          }
+        }
+      }
+      allLists[indexLists] = null;
+    }
+  } while (indexLists < allListsSize || indexArray < allArraySize);
+  return false;
+}
+
+const parserConfiguration = <ParserConfigurations<string, JSONValue>>{
+  matcher: 'application/json',
+  parser: (payload: string) => {
+    const jsonObject: JSONValue = JSON.parse(payload);
+    if (
+      typeof jsonObject === 'object'
+      && payload.includes('"__proto__":')
+      && keyExistsInNestedObject(jsonObject, '__proto__')
+    ) {
+      throw new Error('Using "__proto__" as JSON key is not allowed.');
+    }
+    return jsonObject;
+  },
+  defaultEncoding: 'utf-8',
+  emptyResponse: {},
+};
+
+const app = express();
+app.use(bodyParser({defaultLimit: '100kb', inflate: ['identity', 'br']}, parserConfiguration));
+
+app.listen(3000, () => console.log('Server running on port 3000'));
+```
 ### Type `DefaultOptions`
 
 #### Properties
