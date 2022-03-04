@@ -106,8 +106,8 @@ app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 ### Preventing prototype poisoning on nested parsed JSON objects
 This is an example code to prevent prototype poisoning. The default implementation checks
-only the existence of a "__proto__" key only for the keys in the first object level because
-of speed considerations. If the usage of the "__proto__" key should be prevented for all
+only the existence of a `__proto__` key only for the keys in the first object level because
+of speed considerations. If the usage of the `__proto__` key should be prevented for all
 nested objects then this parser configuration could be used.
 ```ts
 import express from 'express';
