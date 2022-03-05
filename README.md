@@ -17,8 +17,9 @@ app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
 Please be aware that the prevention of prototype poisoning is only implemented for the first
-level of an object converted from JSON. If it is necessary also for nested objects, the
-implementation is shown further down in this readme.
+level of an object converted from JSON, which is sufficient if we do not use `Object.assign`
+with nested child objects. If it is necessary also for nested objects, the implementation
+is shown further down in this readme.
 ```ts
 import express from 'express';
 import {bodyParser} from 'modular-body';
